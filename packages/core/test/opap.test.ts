@@ -8,7 +8,9 @@ import {
   evaluateOpapState,
   encryptOpap,
   decryptOpap,
-  isEncryptedOpap
+  isEncryptedOpap,
+  generateOrt,
+  verifyOrt
 } from '../src/index.js';
 
 describe('OPAP v1.1 Extended Protocol Test Suite (20 Nodes)', () => {
@@ -127,5 +129,23 @@ describe('OPAP v1.1 Extended Protocol Test Suite (20 Nodes)', () => {
     expect(decrypted.s[1].n.length).toBe(13);
 
     await expect(decryptOpap(encrypted, '111111')).rejects.toThrow('Incorrect authorization PIN');
+  });
+
+  it('generates and verifies cryptographic Optical Return Tokens (ORT)', () => {
+    const readings = {
+      psi: 54.2,
+      temp_c: 21.8,
+      verified_by_camera: true
+    };
+    const ort = generateOrt('ASSET-GEN-900', readings, 'ROBOT-SPOT-01', 1711000000000);
+    expect(ort.startsWith('ort:')).toBe(true);
+
+    const verified = verifyOrt(ort);
+    expect(verified.verified).toBe(true);
+    expect(verified.data.version).toBe(1);
+    expect(verified.data.asset).toBe('ASSET-GEN-900');
+    expect(verified.data.op).toBe('ROBOT-SPOT-01');
+    expect(verified.data.val).toEqual(readings);
+    expect(verified.data.ts).toBe(1711000000000);
   });
 });

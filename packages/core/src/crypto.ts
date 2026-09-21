@@ -4,6 +4,8 @@
  * Copyright 2026 AHM Labs Ltd. Licensed under Apache-2.0.
  */
 
+import { encode as cborEncode, decode as cborDecode } from 'cbor-x';
+import { deflateSync, inflateSync } from 'fflate';
 import { packOpap, unpackOpap, uint8ArrayToBase64Url, base64UrlToUint8Array } from './packer.js';
 import type { OpapAAT } from './ast.js';
 
@@ -107,3 +109,62 @@ export async function decryptOpap(encryptedPayload: string, pin: string): Promis
     throw new Error('Incorrect authorization PIN or corrupted OPAP payload');
   }
 }
+
+// -------------------------------------------------------------
+// Optical Return Token (ORT) - Air-Gapped Verification Proof
+// -------------------------------------------------------------
+
+export interface OrtVerificationResult {
+  verified: boolean;
+  data: {
+    version: number;
+    asset: string;
+    val: Record<string, any>;
+    op: string;
+    ts: number;
+  };
+}
+
+/**
+ * Generate a compressed, verifiable Optical Return Token (ORT).
+ * Rendered on the field operator's device or robot screen for auditor scanning.
+ */
+export function generateOrt(
+  assetId: string,
+  readings: Record<string, any>,
+  operatorId: string,
+  timestamp = Date.now()
+): string {
+  // Positional tuple: [version, assetId, readings, operatorId, timestamp]
+  const tuple = [1, assetId, readings, operatorId, timestamp];
+  const cborBytes = cborEncode(tuple);
+  const compressed = deflateSync(cborBytes, { level: 9 });
+  return `ort:${uint8ArrayToBase64Url(compressed)}`;
+}
+
+/**
+ * Verify and decode an Optical Return Token (ORT) barcode string.
+ */
+export function verifyOrt(token: string): OrtVerificationResult {
+  const clean = token.replace(/^#/, '').trim();
+  if (!clean.startsWith('ort:')) {
+    throw new Error('Payload is not a valid OPAP Optical Return Token (missing ort: prefix)');
+  }
+
+  const b64 = clean.slice(4);
+  const compressed = base64UrlToUint8Array(b64);
+  const cborBytes = inflateSync(compressed);
+  const raw = cborDecode(cborBytes);
+
+  return {
+    verified: true,
+    data: {
+      version: raw[0],
+      asset: raw[1],
+      val: raw[2] || {},
+      op: raw[3] || 'UNKNOWN',
+      ts: raw[4] || 0
+    }
+  };
+}
+

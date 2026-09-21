@@ -114,7 +114,7 @@ To eliminate repetitive dictionary keys (`"type"`, `"label"`, `"default"`, `"uni
 
 ## 6. Abstract Action Tree (AAT) Grammar
 
-### 6.1 Node Type Enumeration
+### 6.1 Comprehensive Node Type Registry (v1.1)
 Node type indicators MUST adhere to the following integer registry:
 
 | Code | Type Identifier | Description | Execution Target |
@@ -128,6 +128,17 @@ Node type indicators MUST adhere to the following integer registry:
 | `6` | `SIGN_OFF` | Digital cryptographic sign-off confirmation | Human / Supervisor |
 | `7` | `GAUGE_VISION` | Analog dial bounding box & needle angle definition | Autonomous Robot |
 | `8` | `ACTUATION` | Deterministic physical joint/torque motion primitive | Autonomous Robot |
+| `9` | `TIMER` | Mandatory dwell / soak period countdown with nav lock | Human / Engine |
+| `10` | `MULTI_CHECKLIST` | High-density multi-item verification checklist | Human |
+| `11` | `SCAN_VERIFY` | Barcode / part number optical cross-check assertion | Human / Robot |
+| `12` | `MEDIA_REF` | Minimal vector diagram / valve manifold schematic | Human |
+| `13` | `LOTO_LOCK` | Lockout / Tagout padlock & tag verification interlock | Human / Safety |
+| `14` | `FIDUCIAL_ALIGN` | 6-DOF spatial localization offset $(X, Y, Z, R, P, Y)$ | Autonomous Robot |
+| `15` | `THERMAL_CHECK` | FLIR/IR thermal camera zone inspection threshold | Autonomous Robot |
+| `16` | `ACOUSTIC_VIB` | Acoustic leak detection / vibration FFT frequency check | Autonomous Robot |
+| `17` | `LED_STATE` | Optical equipment panel LED indicator state assertion | Autonomous Robot |
+| `18` | `TELEMETRY_LOG` | Ambient gas / environment sensor ingestion into audit log | Autonomous Robot |
+| `19` | `EMERGENCY_HALT` | Deterministic fail-safe abort and end-effector decoupling | Autonomous Robot |
 
 ### 6.2 Deterministic Expression Evaluator
 Formulas defined within `CALC` and `ALERT` nodes MUST be evaluated using a deterministic operator-precedence parser (Shunting-Yard algorithm).
@@ -140,23 +151,25 @@ To ensure complete immunity against code injection, OPAP runners **MUST NOT** us
 * Logical: `&&` (AND), `||` (OR), `!` (NOT)
 * Functions: `round(x, n)`, `floor(x)`, `ceil(x)`, `abs(x)`, `sqrt(x)`, `min(a, b)`, `max(a, b)`
 
-### 6.3 Robotic Action Trees (RAT) Profile
-For autonomous robotic systems (e.g. ROS2 integration), OPAP defines deterministic actuation nodes:
+### 6.3 Robotic Action Trees (RAT) Profile for Autonomous AMRs
+For autonomous mobile robots (AMRs, quadrupeds, robotic manipulators using ROS2 / Twist), OPAP establishes strict mechanical action boundaries:
 
 ```json
 {
   "t": 8,
-  "joint": "WRIST_ROLL",
+  "joint": "ROBOTIC_WRIST_ROLL",
   "action": "ROTATE",
   "value": 90.0,
   "unit": "DEG",
   "max_torque_nm": 45.0,
-  "timeout_ms": 5000,
+  "timeout_ms": 4000,
   "safety_assert": "VALVE_PRESSURE < 50"
 }
 ```
 
-If any safety assertion fails during robotic evaluation, the runner MUST immediately issue an emergency deceleration stop (`HALT_ALL_JOINTS`).
+* **Spatial Registration (`FIDUCIAL_ALIGN`, Code 14)**: The plate provides millimeter-accurate 6-DOF coordinate offsets relative to the optical tag center, eliminating grasping ambiguity for robotic end-effectors.
+* **Non-Destructive Sensing (`THERMAL_CHECK`, `ACOUSTIC_VIB`, `LED_STATE`, Codes 15-17)**: Instructs robot payload cameras to evaluate equipment health before physical contact.
+* **Deterministic Fail-Safe (`EMERGENCY_HALT`, Code 19)**: If any environment constraint is violated during execution, the runner MUST decouple end-effectors and trigger motor deceleration stops.
 
 ---
 

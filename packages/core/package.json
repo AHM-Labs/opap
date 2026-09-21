@@ -1,0 +1,41 @@
+{
+  "name": "@ahmlabs/opap",
+  "version": "1.0.0",
+  "description": "Reference implementation of the Optical Physical Action Protocol (OPAP) v1.0 by AHM Labs Ltd",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "opap",
+    "air-gapped",
+    "optical-protocol",
+    "qr-code",
+    "offline-first",
+    "cbor",
+    "cryptography",
+    "robotics",
+    "ros2",
+    "industrial-iot",
+    "ahm-labs"
+  ],
+  "author": "AHM Labs Ltd <engineering@ahm-labs.com>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AHM-Labs/opap.git",
+    "directory": "packages/core"
+  },
+  "dependencies": {
+    "cbor-x": "^1.6.6",
+    "fflate": "^0.8.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "opap-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Optical Physical Action Protocol (OPAP) Standards Monorepo by AHM Labs Ltd",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "pnpm --filter @ahmlabs/opap test"
+  },
+  "author": "AHM Labs Ltd <engineering@ahm-labs.com>",
+  "license": "Apache-2.0"
+}
